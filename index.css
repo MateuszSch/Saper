@@ -1,0 +1,42 @@
+input {
+  width: 200px;
+}
+
+button {
+  margin-top: 20px;
+  width: 200px;
+}
+
+div {
+  height: 40px;
+}
+img {
+  height: 40px;
+  width: 40px;
+  cursor: pointer;
+}
+
+#container {
+  display: grid;
+  height: 300px;
+  width: 200px;
+  margin-inline: auto;
+}
+
+#board {
+  margin-top: 24px;
+  display: inline-table;
+}
+.hiden {
+  display: none;
+}
+.cell {
+  background-color: rgb(192, 192, 192);
+  display: inline-flex;
+  height: 40px;
+  width: 40px;
+}
+p {
+  margin: none;
+  position: absolute;
+}
