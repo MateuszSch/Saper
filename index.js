@@ -21,7 +21,7 @@
 //     this.isBombMarked = false;
 //     this.isVisible = false;
 //   }
-//   // id: "1-1",
+//   // position: "1-1",
 //   // value: null, // albo 1,2,3
 //   // isBomb: false,
 //   // isQuestionMark: false,
@@ -29,10 +29,13 @@
 //   // isVisible: false,
 // }
 
+// cell.id = '1-1'
+
 let isBoardRendered = false;
 let isGameRunning = false;
 let bombsPlaced = false;
 const boardData = [];
+
 const showBoardValues = () => {
   const height = parseInt(document.getElementById("heightInput").value);
   const width = parseInt(document.getElementById("widthInput").value);
@@ -105,10 +108,6 @@ const calculateBoardValues = () => {
 };
 
 const placeMines = () => {
-  if (bombsPlaced) {
-    return;
-  }
-
   const height = document.getElementById("heightInput").value;
   const width = document.getElementById("widthInput").value;
   const bombCount = document.getElementById("bombCountInput").value;
@@ -125,24 +124,83 @@ const placeMines = () => {
   calculateBoardValues();
 };
 
+const renderCellContent = (nearBombs) => {};
+
+const checkNearFields = (row, col) => {
+  const height = parseInt(document.getElementById("heightInput").value);
+  const width = parseInt(document.getElementById("widthInput").value);
+
+  for (let di = -1; di <= 1; di++) {
+    for (let dj = -1; dj <= 1; dj++) {
+      // Pomijamy samą komórkę
+      if (di === 0 && dj === 0) continue;
+
+      let newRow = +row + di;
+      let newCol = +col + dj;
+
+      // Sprawdzamy, czy sąsiednia komórka znajduje się w obrębie planszy
+      const isNearCell =
+        newRow >= 1 && newRow <= height && newCol >= 1 && newCol <= width;
+      if (isNearCell) {
+        const cellId = `${newRow}-${newCol}`;
+        const cellImg = document.getElementById(cellId);
+        const nearBombs = cellImg.getAttribute("data-bombs");
+        const isEmptyShow = cellImg.getAttribute("src") === "img/puste.png";
+
+        if (nearBombs == 0 && !isEmptyShow) {
+          cellImg.setAttribute("src", "img/puste.png");
+          // TODO: rekurencja
+          setTimeout(() => {
+            checkNearFields(newRow, newCol);
+          }, 0);
+        }
+        if (nearBombs >= 1) {
+          const hasContent = document
+            .getElementById(`div-${cellId}`)
+            .textContent.trim();
+
+          cellImg.classList.add("hiden");
+
+          if (!hasContent) {
+            const div = document.getElementById(`div-${cellImg.id}`);
+            const p = document.createElement("p");
+            p.textContent = nearBombs;
+            div.append(p);
+          }
+        }
+      }
+    }
+  }
+  //   }
+  // }
+};
+
 const clickImg = (event) => {
-  // lewy czy prawy klik
-  placeMines();
-  const value = event.target.getAttribute("data-bombs");
-  console.log(value);
-  const element = event.target;
-  console.log(element);
-  if (value == null) {
-    event.target.setAttribute("src", "img/bomb.PNG");
+  if (!bombsPlaced) {
+    placeMines();
   }
-  if (value == 0) {
-    event.target.setAttribute("src", "img/puste.png");
+  // TODO: lewy czy prawy klik
+
+  const clickedImg = event.target;
+  const nearBombs = clickedImg.getAttribute("data-bombs");
+  const row = clickedImg.getAttribute("id").split("-")[0];
+  const col = clickedImg.getAttribute("id").split("-")[1];
+
+  console.log(row, col, clickedImg);
+
+  // TODO odsłanienie sąsiednich pól
+  if (nearBombs == null) {
+    clickedImg.setAttribute("src", "img/bomb.PNG");
   }
-  if (value >= 1) {
-    event.target.classList.add("hiden");
-    const div = document.getElementById(`div-${event.target.id}`);
+  if (nearBombs == 0) {
+    clickedImg.setAttribute("src", "img/puste.png");
+    checkNearFields(row, col);
+  }
+  if (nearBombs >= 1) {
+    clickedImg.classList.add("hiden");
+    const div = document.getElementById(`div-${clickedImg.id}`);
     const p = document.createElement("p");
-    p.textContent = value;
+    p.textContent = nearBombs;
     div.append(p);
   }
 };
@@ -156,7 +214,9 @@ const renderBoard = (height, width) => {
 
   for (i = 1; i <= height; i++) {
     const row = document.createElement("div");
+    row.classList.add("row");
 
+    // TODO: rozbić na osobną funkcję
     for (j = 1; j <= width; j++) {
       const div = document.createElement("div");
       div.classList.add("cell");
@@ -174,6 +234,7 @@ const renderBoard = (height, width) => {
     board.append(row);
   }
 
+  // TODO append board to container
   document.body.append(board);
   isBoardRendered = true;
 };

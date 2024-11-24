@@ -10,6 +10,7 @@ button {
 div {
   height: 40px;
 }
+
 img {
   height: 40px;
   width: 40px;
@@ -27,16 +28,20 @@ img {
   margin-top: 24px;
   display: inline-table;
 }
+
 .hiden {
   display: none;
 }
+
+.row {
+  display: flex;
+}
+
 .cell {
   background-color: rgb(192, 192, 192);
-  display: inline-flex;
   height: 40px;
   width: 40px;
-}
-p {
-  margin: none;
-  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
