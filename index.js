@@ -112,10 +112,14 @@ const placeMines = () => {
   const width = document.getElementById("widthInput").value;
   const bombCount = document.getElementById("bombCountInput").value;
   for (let minesPlaced = 0; minesPlaced < bombCount; ) {
-    const i = Math.floor(Math.random() * width) + 1;
-    const j = Math.floor(Math.random() * height) + 1;
+    const i = Math.floor(Math.random() * height) + 1;
+    const j = Math.floor(Math.random() * width) + 1;
     const bombPosition = document.getElementById(`${i}-${j}`);
-    if (bombPosition && !bombPosition.classList.contains("isBomb")) {
+    if (
+      bombPosition &&
+      !bombPosition.classList.contains("isBomb") &&
+      !bombPosition.classList.contains("firstTarget")
+    ) {
       bombPosition.classList.add("isBomb");
       minesPlaced++;
     }
@@ -149,7 +153,6 @@ const checkNearFields = (row, col) => {
 
         if (nearBombs == 0 && !isEmptyShow) {
           cellImg.setAttribute("src", "img/puste.png");
-          // TODO: rekurencja
           setTimeout(() => {
             checkNearFields(newRow, newCol);
           }, 0);
@@ -177,6 +180,8 @@ const checkNearFields = (row, col) => {
 
 const clickImg = (event) => {
   if (!bombsPlaced) {
+    const clickedImg = event.target;
+    clickedImg.classList.add("firstTarget");
     placeMines();
   }
   // TODO: lewy czy prawy klik
