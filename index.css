@@ -1,3 +1,13 @@
+@import url("https://fonts.googleapis.com/css?family=Henny+Penny");
+*{
+  font-family:"Henny Penny";
+}
+body{
+  display: flex;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: center;
+}
 input {
   width: 200px;
 }
@@ -26,7 +36,8 @@ img {
 
 #board {
   margin-top: 24px;
-  display: inline-table;
+  display: flex;
+  flex-direction: column;
 }
 
 .hiden {
