@@ -34,7 +34,6 @@
 let isBoardRendered = false;
 let isGameRunning = false;
 let bombsPlaced = false;
-let gameIsEnd = false;
 const boardData = [];
 
 const showBoardValues = () => {
@@ -190,9 +189,6 @@ const checkNearFields = (row, col) => {
 };
 
 const clickImg = (event) => {
-  if (gameIsEnd) {
-    return;
-  }
   if (!bombsPlaced) {
     const clickedImg = event.target;
     clickedImg.classList.add("firstTarget");
@@ -209,14 +205,6 @@ const clickImg = (event) => {
 
   if (nearBombs == null) {
     clickedImg.setAttribute("src", "img/bomb.PNG");
-    alert("przegrałeś");
-    img = document.querySelectorAll("img");
-    img.forEach((element) => {
-      if (element.classList.contains("isBomb")) {
-        element.setAttribute("src", "img/bomb.PNG");
-      }
-    });
-    gameIsEnd = true;
   }
   if (nearBombs == 0) {
     clickedImg.setAttribute("src", "img/puste.png");
