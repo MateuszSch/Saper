@@ -34,6 +34,7 @@
 let isBoardRendered = false;
 let isGameRunning = false;
 let bombsPlaced = false;
+let gameIsEnd = false;
 const boardData = [];
 
 const showBoardValues = () => {
@@ -115,10 +116,22 @@ const placeMines = () => {
     const i = Math.floor(Math.random() * height) + 1;
     const j = Math.floor(Math.random() * width) + 1;
     const bombPosition = document.getElementById(`${i}-${j}`);
+    const firstTarget = document.getElementsByClassName("firstTarget")[0];
+    id = firstTarget.getAttribute("id").split("-");
+    for (let di = parseFloat(id[0]) - 1; di < parseFloat(id[0]) + 2; di++) {
+      for (let dj = parseFloat(id[1]) - 1; dj < parseFloat(id[1]) + 2; dj++) {
+        const element = document.getElementById(`${di}-${dj}`);
+        if (element == null) {
+          continue;
+        } else {
+          element.classList.add("aroundFirstTarget");
+        }
+      }
+    }
     if (
       bombPosition &&
       !bombPosition.classList.contains("isBomb") &&
-      !bombPosition.classList.contains("firstTarget")
+      !bombPosition.classList.contains("aroundFirstTarget")
     ) {
       bombPosition.classList.add("isBomb");
       minesPlaced++;
@@ -127,8 +140,6 @@ const placeMines = () => {
   bombsPlaced = true;
   calculateBoardValues();
 };
-
-const renderCellContent = (nearBombs) => {};
 
 const checkNearFields = (row, col) => {
   const height = parseInt(document.getElementById("heightInput").value);
@@ -179,6 +190,9 @@ const checkNearFields = (row, col) => {
 };
 
 const clickImg = (event) => {
+  if (gameIsEnd) {
+    return;
+  }
   if (!bombsPlaced) {
     const clickedImg = event.target;
     clickedImg.classList.add("firstTarget");
@@ -193,9 +207,16 @@ const clickImg = (event) => {
 
   console.log(row, col, clickedImg);
 
-  // TODO odsłanienie sąsiednich pól
   if (nearBombs == null) {
     clickedImg.setAttribute("src", "img/bomb.PNG");
+    alert("przegrałeś");
+    img = document.querySelectorAll("img");
+    img.forEach((element) => {
+      if (element.classList.contains("isBomb")) {
+        element.setAttribute("src", "img/bomb.PNG");
+      }
+    });
+    gameIsEnd = true;
   }
   if (nearBombs == 0) {
     clickedImg.setAttribute("src", "img/puste.png");
