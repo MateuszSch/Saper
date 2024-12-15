@@ -1,40 +1,64 @@
-// // stworzyć inputy i przycisk
-
-// // Struktura danych
-// const boardData = [
-//   // {
-//   //   id: "1-1",
-//   //   value: null, // albo 1,2,3
-//   //   isBomb: false,
-//   //   isQuestionMarked: false,
-//   //   isBombMarked: false,
-//   //   isVisible: false,
-//   // },
-// ];
-// // zmienić na klasę
-// class GameElement {
-//   constructor(id, value, isBomb, isBombMarked, isBombMarked, isVisible) {
-//     this.id = id;
-//     this.value = value;
-//     this.isBomb = false;
-//     this.isQuestionMarked = false;
-//     this.isBombMarked = false;
-//     this.isVisible = false;
-//   }
-//   // position: "1-1",
-//   // value: null, // albo 1,2,3
-//   // isBomb: false,
-//   // isQuestionMark: false,
-//   // isBombMarked: false,
-//   // isVisible: false,
-// }
-
-// cell.id = '1-1'
-
 let isBoardRendered = false;
 let isGameRunning = false;
 let bombsPlaced = false;
+let gameIsEnd = false;
 const boardData = [];
+
+const calculateWin = (bombsLeft) => {
+  if (!bombsLeft) {
+    const imgs = document.querySelectorAll("img");
+    const bombCount = document.getElementById("bombCountInput").value;
+    let bomsFlaged = 0;
+
+    imgs.forEach((element) => {
+      const hasFlag = element.classList.contains("isFlaged");
+      const hasBomb = element.classList.contains("isBomb");
+
+      if (hasFlag && hasBomb) {
+        bomsFlaged++;
+      }
+    });
+
+    console.log({ bombCount, bomsFlaged });
+
+    if (bomsFlaged == bombCount) {
+      alert("Wygrałeś");
+      imgs.forEach((element) => {
+        const hasBomb = element.classList.contains("isBomb");
+        if (hasBomb) {
+          element.setAttribute("src", "img/pbomb.PNG");
+        }
+      });
+      gameIsEnd = true;
+      return;
+    }
+
+    // wygrana mix
+    // odfiltrować klepa i flaga
+    const winableElements = new Array(imgs).filter(
+      (element) =>
+        element.getAttribute("src") == "img/klepa.PNG" ||
+        element.getAttribute("src") == "img/flaga.PNG"
+    );
+    const isWinByMix = winableElements.every((element) =>
+      element.classList.contains("isBomb")
+    );
+
+    console.log({ winableElements, isWinByMix });
+
+    if (isWinByMix) {
+      alert("Wygrałeś");
+      imgs.forEach((element) => {
+        const hasBomb = element.classList.contains("isBomb");
+        if (hasBomb) {
+          element.setAttribute("src", "img/pbomb.PNG");
+        }
+      });
+      gameIsEnd = true;
+      return;
+    }
+  }
+};
 
 const showBoardValues = () => {
   const height = parseInt(document.getElementById("heightInput").value);
@@ -189,33 +213,88 @@ const checkNearFields = (row, col) => {
 };
 
 const clickImg = (event) => {
-  if (!bombsPlaced) {
-    const clickedImg = event.target;
-    clickedImg.classList.add("firstTarget");
-    placeMines();
+  if (gameIsEnd) {
+    return;
   }
   // TODO: lewy czy prawy klik
+  if (event.button == 0) {
+    if (!bombsPlaced) {
+      const clickedImg = event.target;
+      clickedImg.classList.add("firstTarget");
+      placeMines();
+      const Timer = document.createElement("div");
+      Timer.id = "showTime";
+      Timer.textContent = "0s";
+      const bombsLeft = document.getElementById("bombCountInput").value;
+      const bombCounter = document.createElement("div");
+      bombCounter.id = "bombCounter";
+      bombCounter.innerText = "ilość pozostałych bomb = " + bombsLeft;
+      container.append(bombCounter);
+      container.append(Timer);
+      setInterval(() => {
+        const showTime = document.querySelector("#showTime");
 
-  const clickedImg = event.target;
-  const nearBombs = clickedImg.getAttribute("data-bombs");
-  const row = clickedImg.getAttribute("id").split("-")[0];
-  const col = clickedImg.getAttribute("id").split("-")[1];
+        showTime.textContent = `${
+          parseInt(showTime.textContent.replace("s", "")) + 1
+        }s`;
+      }, 1000);
+    }
+    const clickedImg = event.target;
+    const nearBombs = clickedImg.getAttribute("data-bombs");
+    const row = clickedImg.getAttribute("id").split("-")[0];
+    const col = clickedImg.getAttribute("id").split("-")[1];
 
-  console.log(row, col, clickedImg);
+    console.log(row, col, clickedImg);
 
-  if (nearBombs == null) {
-    clickedImg.setAttribute("src", "img/bomb.PNG");
+    if (nearBombs == null) {
+      alert("przegrałeś");
+      img = document.querySelectorAll("img");
+      img.forEach((element) => {
+        if (element.classList.contains("isBomb")) {
+          element.setAttribute("src", "img/pbomb.PNG");
+        }
+      });
+      clickedImg.setAttribute("src", "img/bomb.PNG");
+      gameIsEnd = true;
+    }
+    if (nearBombs == 0) {
+      clickedImg.setAttribute("src", "img/puste.png");
+      checkNearFields(row, col);
+    }
+    if (nearBombs >= 1) {
+      clickedImg.classList.add("hiden");
+      const div = document.getElementById(`div-${clickedImg.id}`);
+      const p = document.createElement("p");
+      p.textContent = nearBombs;
+      div.append(p);
+    }
   }
-  if (nearBombs == 0) {
-    clickedImg.setAttribute("src", "img/puste.png");
-    checkNearFields(row, col);
-  }
-  if (nearBombs >= 1) {
-    clickedImg.classList.add("hiden");
-    const div = document.getElementById(`div-${clickedImg.id}`);
-    const p = document.createElement("p");
-    p.textContent = nearBombs;
-    div.append(p);
+  if (event.button == 2) {
+    event.preventDefault();
+    const clickedImg = event.target;
+    src = clickedImg.getAttribute("src");
+    if (src == "img/klepa.PNG") {
+      clickedImg.setAttribute("src", "img/flaga.PNG");
+      clickedImg.classList.add("isFlaged");
+    } else if (src == "img/flaga.PNG") {
+      clickedImg.classList.remove("isFlaged");
+      clickedImg.setAttribute("src", "img/pyt.PNG");
+    } else if (src == "img/pyt.PNG") {
+      clickedImg.setAttribute("src", "img/klepa.PNG");
+    }
+    const img = document.querySelectorAll("img");
+    const bombCounter = document.getElementById("bombCounter");
+    let bombsLeft = document.getElementById("bombCountInput").value;
+    img.forEach((element) => {
+      if (element.getAttribute("src") == "img/flaga.PNG") {
+        bombsLeft = bombsLeft - 1;
+      }
+      bombCounter.innerText = "ilość pozostałych bomb = " + bombsLeft;
+    });
+
+    setTimeout(() => {
+      calculateWin(bombsLeft);
+    }, 1000);
   }
 };
 const renderBoard = (height, width) => {
@@ -230,7 +309,6 @@ const renderBoard = (height, width) => {
     const row = document.createElement("div");
     row.classList.add("row");
 
-    // TODO: rozbić na osobną funkcję
     for (j = 1; j <= width; j++) {
       const div = document.createElement("div");
       div.classList.add("cell");
@@ -239,9 +317,12 @@ const renderBoard = (height, width) => {
       const img = document.createElement("img");
       img.id = `${i}-${j}`;
       img.setAttribute("src", "img/klepa.PNG");
-      img.addEventListener("click", clickImg);
+      img.addEventListener("mousedown", clickImg);
+      img.addEventListener("contextmenu", function (event) {
+        event.preventDefault();
+      });
       div.append(img);
-      //row.append(img);
+
       row.append(div);
     }
 
@@ -261,24 +342,37 @@ const startGame = () => {
   renderBoard(height, width, bombCount);
 };
 
+const validateInput = (event) => {
+  console.debug({ isNan: isNaN(event.target.value) });
+
+  if (isNaN(event.target.value)) {
+    setTimeout(() => {
+      event.target.value = "";
+    }, 1000);
+  }
+};
+
 const renderMenu = () => {
   const heightLabel = document.createElement("label");
   heightLabel.textContent = "Wysokość:";
 
   const heightInput = document.createElement("input");
   heightInput.id = "heightInput";
+  heightInput.addEventListener("keyup", validateInput);
 
   const widhtLabel = document.createElement("label");
   widhtLabel.textContent = "Szerokość:";
 
   const widthInput = document.createElement("input");
   widthInput.id = "widthInput";
+  widthInput.addEventListener("keyup", validateInput);
 
   const bombCountLabel = document.createElement("label");
   bombCountLabel.textContent = "Ilość bomb:";
 
   const bombCountInput = document.createElement("input");
   bombCountInput.id = "bombCountInput";
+  bombCountInput.addEventListener("keyup", validateInput);
 
   const submitButton = document.createElement("button");
   submitButton.id = "submitButton";
@@ -302,6 +396,3 @@ const renderMenu = () => {
 };
 
 renderMenu();
-
-// wypełnić tablice wartościami
-// logika gry z zamianami img
