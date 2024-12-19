@@ -1,11 +1,11 @@
 @import url("https://fonts.googleapis.com/css?family=Henny+Penny");
-*{
-  font-family:"Henny Penny";
+* {
+  font-family: "Henny Penny";
 }
-body{
+body {
   display: flex;
   flex-direction: column;
-  justify-content: center; 
+  justify-content: center;
   align-items: center;
 }
 input {
@@ -32,10 +32,11 @@ img {
   height: 300px;
   width: 200px;
   margin-inline: auto;
+  padding-bottom: 24px;
 }
 
 #board {
-  margin-top: 24px;
+  margin-top: 420px;
   display: flex;
   flex-direction: column;
 }
@@ -55,4 +56,8 @@ img {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+#tableDiv {
+  height: 400px;
 }

@@ -4,6 +4,28 @@ let bombsPlaced = false;
 let gameIsEnd = false;
 const boardData = [];
 
+const username = prompt("Podaj swoją nazwę użytkownika");
+
+const saveWin = () => {
+  const time = document.getElementById("showTime").textContent;
+  const height = document.getElementById("heightInput").value;
+  const width = document.getElementById("widthInput").value;
+  const bombCount = document.getElementById("bombCountInput").value;
+  const gameMode = `${height}x${width}x${bombCount}`;
+
+  const previesWins = document.cookie
+    .split(";")
+    .find((cookie) => cookie.includes("wins"));
+
+  if (previesWins) {
+    const wins = JSON.parse(previesWins.split("=")[1]);
+    wins.push({ username, time, gameMode });
+    document.cookie = `wins=${JSON.stringify(wins)}`;
+  } else {
+    document.cookie = `wins=${JSON.stringify([{ username, time, gameMode }])}`;
+  }
+};
+
 const calculateWin = (bombsLeft) => {
   if (!bombsLeft) {
     const imgs = document.querySelectorAll("img");
@@ -30,11 +52,10 @@ const calculateWin = (bombsLeft) => {
         }
       });
       gameIsEnd = true;
+      saveWin();
       return;
     }
 
-    // wygrana mix
-    // odfiltrować klepa i flaga
     const winableElements = new Array(imgs).filter(
       (element) =>
         element.getAttribute("src") == "img/klepa.PNG" ||
@@ -55,6 +76,7 @@ const calculateWin = (bombsLeft) => {
         }
       });
       gameIsEnd = true;
+      saveWin();
       return;
     }
   }
@@ -64,23 +86,19 @@ const showBoardValues = () => {
   const height = parseInt(document.getElementById("heightInput").value);
   const width = parseInt(document.getElementById("widthInput").value);
 
-  // Przechodzimy po całej planszy
   for (let row = 1; row <= height; row++) {
     for (let col = 1; col <= width; col++) {
       const img = document.getElementById(`${row}-${col}`);
 
-      // Sprawdzamy, czy komórka zawiera bombę
       if (img.classList.contains("isBomb")) {
         boardData.push({ position: `${row}-${col}`, value: "bomb" });
       } else {
-        // Pobieramy wartość liczby sąsiednich bomb
         const bombCount = img.getAttribute("data-bombs");
         boardData.push({ position: `${row}-${col}`, value: bombCount });
       }
     }
   }
 
-  // Wyświetlamy wynik w konsoli
   console.log(boardData);
 };
 
@@ -88,29 +106,23 @@ const calculateBoardValues = () => {
   const height = parseInt(document.getElementById("heightInput").value);
   const width = parseInt(document.getElementById("widthInput").value);
 
-  // Przechodzimy po całej planszy
   for (let row = 1; row <= height; row++) {
     for (let col = 1; col <= width; col++) {
       const img = document.getElementById(`${row}-${col}`);
 
-      // Jeśli komórka zawiera bombę, pomijamy
       if (img.classList.contains("isBomb")) {
         continue;
       }
 
-      // Liczba sąsiednich bomb
       let bombCount = 0;
 
-      // Sprawdzamy sąsiednie komórki (8 kierunków)
       for (let di = -1; di <= 1; di++) {
         for (let dj = -1; dj <= 1; dj++) {
-          // Pomijamy samą komórkę
           if (di === 0 && dj === 0) continue;
 
           let newRow = row + di;
           let newCol = col + dj;
 
-          // Sprawdzamy, czy sąsiednia komórka znajduje się w obrębie planszy
           if (
             newRow >= 1 &&
             newRow <= height &&
@@ -170,13 +182,11 @@ const checkNearFields = (row, col) => {
 
   for (let di = -1; di <= 1; di++) {
     for (let dj = -1; dj <= 1; dj++) {
-      // Pomijamy samą komórkę
       if (di === 0 && dj === 0) continue;
 
       let newRow = +row + di;
       let newCol = +col + dj;
 
-      // Sprawdzamy, czy sąsiednia komórka znajduje się w obrębie planszy
       const isNearCell =
         newRow >= 1 && newRow <= height && newCol >= 1 && newCol <= width;
       if (isNearCell) {
@@ -208,15 +218,13 @@ const checkNearFields = (row, col) => {
       }
     }
   }
-  //   }
-  // }
 };
 
 const clickImg = (event) => {
   if (gameIsEnd) {
     return;
   }
-  // TODO: lewy czy prawy klik
+
   if (event.button == 0) {
     if (!bombsPlaced) {
       const clickedImg = event.target;
@@ -233,10 +241,11 @@ const clickImg = (event) => {
       container.append(Timer);
       setInterval(() => {
         const showTime = document.querySelector("#showTime");
-
-        showTime.textContent = `${
-          parseInt(showTime.textContent.replace("s", "")) + 1
-        }s`;
+        if (!gameIsEnd) {
+          showTime.textContent = `${
+            parseInt(showTime.textContent.replace("s", "")) + 1
+          }s`;
+        }
       }, 1000);
     }
     const clickedImg = event.target;
@@ -329,7 +338,6 @@ const renderBoard = (height, width) => {
     board.append(row);
   }
 
-  // TODO append board to container
   document.body.append(board);
   isBoardRendered = true;
 };
@@ -395,4 +403,110 @@ const renderMenu = () => {
   document.body.append(container);
 };
 
+const renderWinsTable = (selectedGameMode) => {
+  const previesWins = document.cookie
+    .split(";")
+    .find((cookie) => cookie.includes("wins"));
+
+  if (previesWins) {
+    const unfilteredWins = JSON.parse(previesWins.split("=")[1]);
+    const wins = unfilteredWins
+      .filter((win) => win.gameMode == selectedGameMode)
+      .sort(
+        (a, b) =>
+          parseInt(a.time.replace("s", "")) - parseInt(b.time.replace("s", ""))
+      )
+      .slice(0, 10);
+
+    const table = document.createElement("table");
+    table.id = "winsTable";
+    const thead = document.createElement("thead");
+    const tbody = document.createElement("tbody");
+
+    const headerRow = document.createElement("tr");
+    const usernameHeader = document.createElement("th");
+    const timeHeader = document.createElement("th");
+    const gameModeHeader = document.createElement("th");
+
+    usernameHeader.textContent = "Username";
+    timeHeader.textContent = "Time";
+    gameModeHeader.textContent = "Game mode";
+
+    headerRow.append(usernameHeader, timeHeader, gameModeHeader);
+    thead.append(headerRow);
+
+    wins.forEach((win) => {
+      const row = document.createElement("tr");
+      const username = document.createElement("td");
+      const time = document.createElement("td");
+      const gameMode = document.createElement("td");
+
+      username.textContent = win.username;
+      time.textContent = win.time;
+      gameMode.textContent = win.gameMode;
+
+      row.append(username, time, gameMode);
+      tbody.append(row);
+    });
+
+    const currentTable = document.querySelector("#winsTable");
+    if (currentTable) {
+      currentTable.remove();
+    }
+
+    const tableDiv = document.querySelector("#tableDiv");
+
+    table.append(thead, tbody);
+    tableDiv.append(table);
+  }
+};
+
+const rednerSelect = () => {
+  const previesWins = document.cookie
+    .split(";")
+    .find((cookie) => cookie.includes("wins"));
+  const wins = JSON.parse(previesWins.split("=")[1]);
+
+  const gamesModes = wins.map((win) => win.gameMode);
+  const uniqueGameModes = [];
+
+  gamesModes.forEach((gameMode) => {
+    if (!uniqueGameModes.includes(gameMode)) {
+      uniqueGameModes.push(gameMode);
+    }
+  });
+
+  const select = document.createElement("select");
+  select.id = "gameModeSelect";
+
+  uniqueGameModes.forEach((gameMode) => {
+    const option = document.createElement("option");
+    option.value = gameMode;
+    option.textContent = gameMode;
+    select.append(option);
+  });
+  const tableDiv = document.createElement("div");
+  tableDiv.id = "tableDiv";
+
+  const container = document.querySelector("#container");
+
+  container.insertBefore(tableDiv, container.firstChild);
+  container.insertBefore(select, container.firstChild);
+
+  select.addEventListener("change", (event) =>
+    renderWinsTable(event.target.value)
+  );
+};
+
+const renderFirstTable = () => {
+  const previesWins = document.cookie
+    .split(";")
+    .find((cookie) => cookie.includes("wins"));
+  const unfilteredWins = JSON.parse(previesWins.split("=")[1]);
+  const defaultGameMode = unfilteredWins[0].gameMode;
+  renderWinsTable(defaultGameMode);
+};
+
 renderMenu();
+rednerSelect();
+renderFirstTable();
